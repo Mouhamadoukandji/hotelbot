@@ -1,10 +1,8 @@
 import streamlit as st
 import pandas as pd
-from OracleDatabase import OracleDatabase
-import CreateTables
-import insertData
-from backend import config_claude_model
-
+from backend.OracleDatabase import OracleDatabase
+from backend import CreateTables
+from backend import config_claude_model, insertData
 
 
 def page_admin():
