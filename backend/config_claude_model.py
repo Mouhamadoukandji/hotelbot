@@ -26,7 +26,7 @@ SCHEMA_TRANS = """"
 """
 client = anthropic.Anthropic(
     # defaults to os.environ.get("ANTHROPIC_API_KEY")
-    api_key=os.getenv("CLAUDE-API-KEY"),
+    api_key=os.getenv("CLAUDE_API_KEY"),
 )
 
 
@@ -36,6 +36,9 @@ def generer_requete_sql(question_utilisateur):
 
     Génère UNIQUEMENT la requête SQL Oracle sans explications.
     Utilise le schéma fourni.
+    
+    Si la requête tente de faire autre chose (comme demande de suppression ou de modification)
+     qu'une lecteur Génère une chaine VIDE
     """
 
 

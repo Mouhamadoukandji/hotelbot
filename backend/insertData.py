@@ -1,15 +1,13 @@
 from datetime import datetime, timedelta
-from OracleDatabase import OracleDatabase
+from backend import OracleDatabase
 
 
 def inserer_donnees():
-    """Insère des données d'exemple réalistes dans toutes les tables"""
 
     try:
-        db = OracleDatabase()
-        print("🚀 Début de l'insertion des données...")
+        db = OracleDatabase.OracleDatabase()
+        print("Début de l'insertion des données...")
 
-        # 1. INSERTION DES HÔTELS
         print("🏨 Insertion des hôtels...")
         hotels = [
             (1, 'Hôtel Plaza Athénée', '25 Avenue Montaigne', 'Paris', 5),
@@ -32,7 +30,6 @@ def inserer_donnees():
             )
         print(f"✅ {len(hotels)} hôtels insérés")
 
-        # 2. INSERTION DES TYPES DE CHAMBRE
         print("🛏️ Insertion des types de chambre...")
         types_chambre = [
             (1, 'Chambre Simple Standard', 89.00),
@@ -54,16 +51,13 @@ def inserer_donnees():
             )
         print(f"✅ {len(types_chambre)} types de chambre insérés")
 
-        # 3. INSERTION DES CHAMBRES
         print("🚪 Insertion des chambres...")
         chambres = []
         chambre_id = 100
 
-        # Répartition des chambres par hôtel
-        for hotel_id in range(1, 11):  # 10 hôtels
-            # Chaque hôtel a 10 chambres de différents types
+        for hotel_id in range(1, 11):
             for i in range(10):
-                type_chambre = (i % 10) + 1  # Répartir les types
+                type_chambre = (i % 10) + 1
                 chambres.append((chambre_id, hotel_id, type_chambre))
                 chambre_id += 1
 
@@ -74,7 +68,6 @@ def inserer_donnees():
             )
         print(f"✅ {len(chambres)} chambres insérées")
 
-        # 4. INSERTION DES CLIENTS
         print("👥 Insertion des clients...")
         clients = [
             (1, 'Martin', 'Sophie', '15 Rue de la République', 'Lyon'),
@@ -101,26 +94,21 @@ def inserer_donnees():
             )
         print(f"✅ {len(clients)} clients insérés")
 
-        # 5. INSERTION DES RÉSERVATIONS
         print("📅 Insertion des réservations...")
         reservations = []
 
-        # Dates pour les réservations (futures)
         aujourdhui = datetime.now()
 
-        # Créer 20 réservations variées
-        for i in range(20):
-            num_cl = (i % 15) + 1  # Répartir sur les 15 clients
-            num_ho = (i % 10) + 1  # Répartir sur les 10 hôtels
-            num_ty = (i % 10) + 1  # Répartir sur les 10 types
 
-            # Date d'arrivée : entre 10 et 60 jours dans le futur
+        for i in range(20):
+            num_cl = (i % 15) + 1
+            num_ho = (i % 10) + 1
+            num_ty = (i % 10) + 1
+
             date_arrivee = aujourdhui + timedelta(days=10 + (i * 3))
 
-            # Durée : entre 1 et 7 jours
             nb_jours = (i % 7) + 1
 
-            # Nombre de chambres : 1 ou 2
             nb_chambres = 1 if i % 3 == 0 else 2
 
             reservations.append((
@@ -131,28 +119,24 @@ def inserer_donnees():
             ))
 
         for reserv in reservations:
-            # Note: Oracle gère INTERVAL DAY TO SECOND avec des strings
             db.executer_requete(
                 "INSERT INTO RESERVATIONS (NUMCL, NUMHO, NUMTY, DATEA, NBJOURS, NBCHAMBRES) VALUES (:1, :2, :3, :4, NUMTODSINTERVAL(:5, 'DAY'), :6)",
                 (reserv[0], reserv[1], reserv[2], reserv[3], reserv[4], reserv[5])
             )
         print(f"✅ {len(reservations)} réservations insérées")
 
-        # 6. INSERTION DES OCCUPATIONS (séjours passés et actuels)
         print("🏠 Insertion des occupations...")
         occupations = []
 
-        # Créer 30 occupations variées
         for i in range(30):
             num_cl = (i % 15) + 1
             num_ho = (i % 10) + 1
             num_ch = 100 + (i % (100-1))
 
-            # Dates passées ou actuelles
-            if i < 15:  # Séjours passés
+            if i < 15:
                 date_arrivee = aujourdhui - timedelta(days=30 + (i * 2))
                 date_depart = date_arrivee + timedelta(days=(i % 5) + 1)
-            else:  # Séjours actuels
+            else:
                 date_arrivee = aujourdhui - timedelta(days=(i % 3))
                 date_depart = aujourdhui + timedelta(days=(i % 4) + 1)
 
@@ -171,7 +155,6 @@ def inserer_donnees():
             )
         print(f"✅ {len(occupations)} occupations insérées")
 
-        # VALIDATION FINALE
         print("\n🎉 INSERTION TERMINÉE AVEC SUCCÈS !")
         print("📊 Récapitulatif des données insérées :")
 

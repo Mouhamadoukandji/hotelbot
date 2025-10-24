@@ -1,15 +1,126 @@
 import streamlit as st
 import pandas as pd
-from backend.OracleDatabase import OracleDatabase
+from backend import OracleDatabase
 from backend import CreateTables
 from backend import config_claude_model, insertData
+
+
+# Initialisation de la session
+def initialiser_session():
+    """Initialise les variables de session pour la conversation"""
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+
+    if "db" not in st.session_state:
+        st.session_state.db = OracleDatabase.OracleDatabase()
+
+
+def page_chatbot_conversation():
+    """Page chatbot avec conversation continue"""
+    st.title("💬 Chatbot de Réservation Hôtelière")
+    st.markdown("Discutez avec moi pour trouver l'hôtel parfait !")
+
+    # Initialisation de la session
+    initialiser_session()
+
+    # Sidebar avec contrôles
+    with st.sidebar:
+        st.header("🔧 Contrôles Conversation")
+
+        if st.button("🗑️ Effacer la conversation", use_container_width=True):
+            st.session_state.messages = []
+            st.rerun()
+
+        if st.button("🆕 Nouvelle recherche", use_container_width=True):
+            st.session_state.messages = []
+            st.rerun()
+
+        st.markdown("---")
+        st.markdown("**💡 Exemples de questions :**")
+        st.markdown("• Hôtels 4 étoiles à Paris")
+        st.markdown("• Chambres pas chères à Lyon")
+        st.markdown("• Disponibilités ce weekend")
+        st.markdown("• Hôtels avec piscine à Marseille")
+
+    # Affichage de l'historique des messages
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    # Zone de saisie en bas de page
+    if prompt := st.chat_input("Posez votre question ici..."):
+        # Ajouter le message utilisateur à l'historique
+        st.session_state.messages.append({"role": "user", "content": prompt})
+
+        # Afficher immédiatement le message utilisateur
+        with st.chat_message("user"):
+            st.markdown(prompt)
+
+        # Générer et afficher la réponse
+        with st.chat_message("assistant"):
+            with st.spinner("🔍 Recherche en cours..."):
+                try:
+                    # Générer la requête SQL
+                    requete_sql = config_claude_model.generer_requete_sql(prompt)
+
+                    # Afficher la requête SQL (optionnel - pour debug)
+                    with st.expander("📋 Voir la requête SQL générée"):
+                        st.code(requete_sql, language="sql")
+
+                    # Exécuter la requête
+                    resultats = st.session_state.db.executer_requete(requete_sql)
+
+                    # Traduire les résultats
+                    explication_sql = config_claude_model.sql_to_translation(resultats)
+
+                    # Formater élégamment la réponse
+                    reponse_formatee = config_claude_model.formater_elegant(explication_sql)
+
+                except Exception as e:
+                    reponse_formatee = f"❌ Désolé, une erreur s'est produite : {str(e)}"
+
+                # Afficher la réponse
+                st.markdown(reponse_formatee)
+
+        # Ajouter la réponse à l'historique
+        st.session_state.messages.append({"role": "assistant", "content": reponse_formatee})
+
+
+def page_chatbot_original():
+    """Page chatbot version originale (formulaire)"""
+    st.title("🤖 Chatbot de Réservation - Version Formulaire")
+
+    db = OracleDatabase.OracleDatabase()
+
+    with st.form("hotel_query_form"):
+        user_query = st.text_input(
+            "Posez votre question :",
+            placeholder="Ex: Trouve-moi un hôtel à Paris avec une chambre double"
+        )
+
+        submitted = st.form_submit_button("Rechercher")
+
+        if submitted and user_query:
+            st.write("**Votre demande :**", user_query)
+
+            with st.spinner("🤖 Recherche en cours..."):
+                try:
+                    response = config_claude_model.generer_requete_sql(user_query)
+                    result = db.executer_requete(response)
+                    explication_sql = config_claude_model.sql_to_translation(result)
+                    reponse_formatter = config_claude_model.formater_elegant(explication_sql)
+
+                    st.success(reponse_formatter)
+
+                except Exception as e:
+                    st.error(f"Erreur : {str(e)}")
 
 
 def page_admin():
     st.title("Administration Base de Données")
 
     try:
-        db = OracleDatabase()
+        db = OracleDatabase.OracleDatabase()
         st.success("Connecté à la base de données Oracle")
     except Exception as e:
         st.error(f"Erreur de connexion: {e}")
@@ -107,45 +218,29 @@ def page_admin():
             st.error(f"Erreur lors du calcul des statistiques: {e}")
 
 
-def askquestion():
-    db = OracleDatabase()
-    with st.form("hotel_query_form"):
-        user_query = st.text_input(
-            "Posez votre question :",
-            placeholder="Ex: Trouve-moi un hôtel à Paris avec une chambre double"
-        )
-
-        submitted = st.form_submit_button("Rechercher")
-
-        if submitted and user_query:
-            st.write("**Votre demande :**", user_query)
-            response = config_claude_model.generer_requete_sql(user_query)
-            result = db.executer_requete(response)
-            explication_sql = config_claude_model.sql_to_translation(result)
-            reponse_formatter = config_claude_model.formater_elegant(explication_sql)
-
-            with st.spinner("🤖 Recherche en cours..."):
-                st.info("Connexion à la base de données Oracle...")
-                st.success(reponse_formatter)
-
-
-
 def main():
-    st.sidebar.title("HotelBot Navigation")
+    st.sidebar.title("🏨 HotelBot Navigation")
 
     page = st.sidebar.radio(
         "Choisir une page:",
-        ["Chatbot", "Administration BD"]
+        ["Chatbot Conversation", "Chatbot Formulaire", "Administration BD"]
     )
 
-    if page == "Chatbot":
-        askquestion()
-
+    if page == "Chatbot Conversation":
+        page_chatbot_conversation()
+    elif page == "Chatbot Formulaire":
+        page_chatbot_original()
     elif page == "Administration BD":
         page_admin()
 
 
 if __name__ == "__main__":
-    CreateTables.creer_tables()
-    insertData.inserer_donnees()
+    # Initialisation de la base de données (à exécuter une seule fois)
+    try:
+        CreateTables.creer_tables()
+        insertData.inserer_donnees()
+        st.success("✅ Base de données initialisée avec succès")
+    except Exception as e:
+        st.warning(f"⚠️ Les tables existent peut-être déjà : {e}")
+
     main()
