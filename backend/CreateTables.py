@@ -6,7 +6,7 @@ def creer_tables():
 
     scripts_creation = [
         """
-        CREATE TABLE IF NOT EXISTS HOTELS (
+        CREATE TABLE HOTELS (
             NUMHO         NUMBER(10)      NOT NULL,
             NOMHO         VARCHAR2(100)   NOT NULL,
             RUEADRHO      VARCHAR2(200)   NOT NULL,
@@ -16,7 +16,7 @@ def creer_tables():
         )
         """,
         """
-        CREATE TABLE IF NOT EXISTS TYPESCHAMBRE (
+        CREATE TABLE TYPESCHAMBRE (
             NUMTY   NUMBER(10)    NOT NULL,
             NOMTY   VARCHAR2(60)  NOT NULL,
             PRIXTY  NUMBER(8,2)   NOT NULL,
@@ -25,7 +25,7 @@ def creer_tables():
         )
         """,
         """
-        CREATE TABLE IF NOT EXISTS CHAMBRES (
+        CREATE TABLE CHAMBRES (
             NUMCH   NUMBER(10)   NOT NULL,
             NUMHO   NUMBER(10)   NOT NULL,
             NUMTY   NUMBER(10)   NOT NULL,
@@ -35,7 +35,7 @@ def creer_tables():
         )
         """,
         """
-        CREATE TABLE IF NOT EXISTS CLIENTS (
+        CREATE TABLE CLIENTS (
             NUMCL      NUMBER(10)     NOT NULL,
             NOMCL      VARCHAR2(100)  NOT NULL,
             PRENOMCL   VARCHAR2(100)  NOT NULL,
@@ -45,7 +45,7 @@ def creer_tables():
         )
         """,
         """
-        CREATE TABLE IF NOT EXISTS RESERVATIONS (
+        CREATE TABLE RESERVATIONS (
             NUMCL        NUMBER(10)                 NOT NULL,
             NUMHO        NUMBER(10)                 NOT NULL,
             NUMTY        NUMBER(10)                 NOT NULL,
@@ -61,7 +61,7 @@ def creer_tables():
         )
         """,
         """
-        CREATE TABLE IF NOT EXISTS OCCUPATIONS (
+        CREATE TABLE OCCUPATIONS (
             NUMCL   NUMBER(10)   NOT NULL,
             NUMHO   NUMBER(10)   NOT NULL,
             NUMCH   NUMBER(10)   NOT NULL,
