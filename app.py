@@ -5,9 +5,7 @@ from backend import CreateTables
 from backend import config_claude_model, insertData
 
 
-# Initialisation de la session
 def initialiser_session():
-    """Initialise les variables de session pour la conversation"""
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
@@ -16,14 +14,11 @@ def initialiser_session():
 
 
 def page_chatbot_conversation():
-    """Page chatbot avec conversation continue"""
     st.title("💬 Chatbot de Réservation Hôtelière")
     st.markdown("Discutez avec moi pour trouver l'hôtel parfait !")
 
-    # Initialisation de la session
     initialiser_session()
 
-    # Sidebar avec contrôles
     with st.sidebar:
         st.header("🔧 Contrôles Conversation")
 
@@ -42,52 +37,39 @@ def page_chatbot_conversation():
         st.markdown("• Disponibilités ce weekend")
         st.markdown("• Hôtels avec piscine à Marseille")
 
-    # Affichage de l'historique des messages
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
-    # Zone de saisie en bas de page
     if prompt := st.chat_input("Posez votre question ici..."):
-        # Ajouter le message utilisateur à l'historique
         st.session_state.messages.append({"role": "user", "content": prompt})
 
-        # Afficher immédiatement le message utilisateur
         with st.chat_message("user"):
             st.markdown(prompt)
 
-        # Générer et afficher la réponse
         with st.chat_message("assistant"):
             with st.spinner("🔍 Recherche en cours..."):
                 try:
-                    # Générer la requête SQL
                     requete_sql = config_claude_model.generer_requete_sql(prompt)
 
-                    # Afficher la requête SQL (optionnel - pour debug)
                     with st.expander("📋 Voir la requête SQL générée"):
                         st.code(requete_sql, language="sql")
 
-                    # Exécuter la requête
                     resultats = st.session_state.db.executer_requete(requete_sql)
 
-                    # Traduire les résultats
                     explication_sql = config_claude_model.sql_to_translation(resultats)
 
-                    # Formater élégamment la réponse
                     reponse_formatee = config_claude_model.formater_elegant(explication_sql)
 
                 except Exception as e:
                     reponse_formatee = f"❌ Désolé, une erreur s'est produite : {str(e)}"
 
-                # Afficher la réponse
                 st.markdown(reponse_formatee)
 
-        # Ajouter la réponse à l'historique
         st.session_state.messages.append({"role": "assistant", "content": reponse_formatee})
 
 
 def page_chatbot_original():
-    """Page chatbot version originale (formulaire)"""
     st.title("🤖 Chatbot de Réservation - Version Formulaire")
 
     db = OracleDatabase.OracleDatabase()
@@ -126,12 +108,10 @@ def page_admin():
         st.error(f"Erreur de connexion: {e}")
         return
 
-    # Section 1: Vérification des tables
     st.header("Vérification des Tables")
 
     if st.button("Vérifier toutes les tables"):
         try:
-            # Récupérer la liste des tables
             result = db.executer_requete("""
                 SELECT table_name, num_rows 
                 FROM user_tables 
@@ -141,11 +121,9 @@ def page_admin():
             if result['donnees']:
                 st.success(f"{len(result['donnees'])} tables trouvées")
 
-                # Afficher sous forme de tableau
                 df_tables = pd.DataFrame(result['donnees'], columns=result['colonnes'])
                 st.dataframe(df_tables, use_container_width=True)
 
-                # Vérifier les tables spécifiques à votre schéma
                 tables_attendues = ['HOTELS', 'TYPESCHAMBRE', 'CHAMBRES', 'CLIENTS', 'RESERVATIONS', 'OCCUPATIONS']
                 tables_trouvees = [row[0] for row in result['donnees']]
 
@@ -178,7 +156,6 @@ def page_admin():
                 df = pd.DataFrame(result['donnees'], columns=result['colonnes'])
                 st.dataframe(df, use_container_width=True)
 
-                # Statistiques simples
                 col1, col2, col3 = st.columns(3)
                 with col1:
                     st.metric("Nombre total", len(df))
@@ -235,7 +212,6 @@ def main():
 
 
 if __name__ == "__main__":
-    # Initialisation de la base de données (à exécuter une seule fois)
     try:
         CreateTables.creer_tables()
         insertData.inserer_donnees()
