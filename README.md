@@ -89,9 +89,9 @@ CLAUDE_API_KEY="VOTRE CLEF"
 
 3. **Lancer l'application**
 ```bash
-docker-compose up --build
+pip install -r requirements.txt OUBIEN pip3 install -r requirements.txt
 
-pip install -r requirements.txt
+docker-compose up --build
 ```
 
 4. **Accéder à l'interface**
