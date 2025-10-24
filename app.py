@@ -3,13 +3,13 @@ import pandas as pd
 from OracleDatabase import OracleDatabase
 import CreateTables
 import insertData
+from backend import config_claude_model
 
 
 
 def page_admin():
     st.title("Administration Base de Données")
 
-    # Initialisation de la base de données
     try:
         db = OracleDatabase()
         st.success("Connecté à la base de données Oracle")
@@ -52,7 +52,6 @@ def page_admin():
         except Exception as e:
             st.error(f"Erreur lors de la vérification: {e}")
 
-    # Section 2: Explorer une table spécifique
     st.header("🔎 Explorer les données")
 
     table_selectionnee = st.selectbox(
@@ -67,7 +66,6 @@ def page_admin():
             if result['donnees']:
                 st.success(f"{len(result['donnees'])} enregistrements dans {table_selectionnee}")
 
-                # Afficher sous forme de tableau interactif
                 df = pd.DataFrame(result['donnees'], columns=result['colonnes'])
                 st.dataframe(df, use_container_width=True)
 
@@ -86,7 +84,6 @@ def page_admin():
         except Exception as e:
             st.error(f"Erreur lors de l'accès à {table_selectionnee}: {e}")
 
-    # Section 3: Statistiques globales
     st.header("Statistiques Globales")
 
     if st.button("Calculer les statistiques"):
@@ -112,7 +109,29 @@ def page_admin():
             st.error(f"Erreur lors du calcul des statistiques: {e}")
 
 
-# Navigation principale
+def askquestion():
+    db = OracleDatabase()
+    with st.form("hotel_query_form"):
+        user_query = st.text_input(
+            "Posez votre question :",
+            placeholder="Ex: Trouve-moi un hôtel à Paris avec une chambre double"
+        )
+
+        submitted = st.form_submit_button("Rechercher")
+
+        if submitted and user_query:
+            st.write("**Votre demande :**", user_query)
+            response = config_claude_model.generer_requete_sql(user_query)
+            result = db.executer_requete(response)
+            explication_sql = config_claude_model.sql_to_translation(result)
+            reponse_formatter = config_claude_model.formater_elegant(explication_sql)
+
+            with st.spinner("🤖 Recherche en cours..."):
+                st.info("Connexion à la base de données Oracle...")
+                st.success(reponse_formatter)
+
+
+
 def main():
     st.sidebar.title("HotelBot Navigation")
 
@@ -122,10 +141,7 @@ def main():
     )
 
     if page == "Chatbot":
-        # Votre code chatbot existant ici
-        st.title("Chatbot de Réservation")
-        st.write("Interface principale du chatbot...")
-        # ... votre code chatbot ...
+        askquestion()
 
     elif page == "Administration BD":
         page_admin()

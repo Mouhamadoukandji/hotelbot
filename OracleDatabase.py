@@ -27,7 +27,6 @@ class OracleDatabase:
             raise
 
     def executer_requete(self, requete_sql, params=None):
-        """Exécuter une requête SQL et retourner les résultats"""
         try:
             with self.connection.cursor() as cursor:
                 if params:
@@ -35,7 +34,6 @@ class OracleDatabase:
                 else:
                     cursor.execute(requete_sql)
 
-                # Pour les SELECT, retourner les résultats
                 if requete_sql.strip().upper().startswith('SELECT'):
                     colonnes = [col[0] for col in cursor.description]
                     resultats = cursor.fetchall()
@@ -50,7 +48,6 @@ class OracleDatabase:
             raise
 
     def fermer_connexion(self):
-        """Fermer proprement la connexion"""
         if self.connection:
             self.connection.close()
             print("🔌 Connexion Oracle fermée")
