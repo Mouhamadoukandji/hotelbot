@@ -1,0 +1,48 @@
+services:
+  oracle-db:
+    image: gvenzl/oracle-xe:21-slim
+    container_name: hotel-oracle-db
+    ports:
+      - "1521:1521"
+    environment:
+      - ORACLE_PASSWORD=${ORACLE_PASSWORD}
+      - ORACLE_DATABASE=${ORACLE_DATABASE}
+    volumes:
+      - oracle-data:/opt/oracle/oradata
+      - ./db/init.sql:/container-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "echo 'select 1 from dual' | sqlplus -s system/${ORACLE_PASSWORD}@localhost:1521/XEPDB1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+
+  streamlit-app:
+    build: .
+    container_name: hotel-streamlit
+    ports:
+      - "8501:8501"
+    depends_on:
+      - oracle-db
+    environment:
+      - ORACLE_HOST=${ORACLE_HOST}
+      - ORACLE_PORT=${ORACLE_PORT}
+      - ORACLE_USER=${ORACLE_USER}
+      - ORACLE_PASSWORD=${ORACLE_PASSWORD}
+      - ORACLE_SERVICE=${ORACLE_SERVICE}
+    volumes:
+      - ./app.py:/app/app.py
+      - ./backend:/app/backend
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8501/_stcore/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  oracle-data:
+
+networks:
+  default:
+    name: hotel-network
