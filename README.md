@@ -90,6 +90,8 @@ CLAUDE_API_KEY="VOTRE CLEF"
 3. **Lancer l'application**
 ```bash
 docker-compose up --build
+
+pip install -r requirements.txt
 ```
 
 4. **Accéder à l'interface**
@@ -222,5 +224,3 @@ Pour toute question ou suggestion concernant ce projet académique, n'hésitez p
 - [Documentation Claude API](https://docs.anthropic.com/)
 - [Documentation Oracle Database](https://docs.oracle.com/en/database/)
 - [Documentation Streamlit](https://docs.streamlit.io/)
-
-pip install -r requirements.txt
